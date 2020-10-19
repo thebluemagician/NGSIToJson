@@ -22,7 +22,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>nifi-custom-nar</artifactId>
+    <artifactId>nifi-ngsi2json-nar</artifactId>
     <packaging>nar</packaging>
     <properties>
         <maven.javadoc.skip>true</maven.javadoc.skip>
@@ -32,7 +32,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.nifi</groupId>
-            <artifactId>nifi-custom-processors</artifactId>
+            <artifactId>nifi-ngsi2json-processors</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

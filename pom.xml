@@ -22,14 +22,13 @@
         <version>1.8.0</version>
     </parent>
 
-    <groupId>org.apache.nifi</groupId>
     <artifactId>NGSIToJson</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
-        <module>nifi-custom-processors</module>
-        <module>nifi-custom-nar</module>
+        <module>nifi-ngsi2json-processors</module>
+        <module>nifi-ngsi2json-nar</module>
     </modules>
 
 </project>

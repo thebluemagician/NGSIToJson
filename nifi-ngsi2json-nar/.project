@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>nifi-custom-processors</name>
+	<name>nifi-ngsi2json-nar</name>
 	<comment></comment>
 	<projects>
 	</projects>
