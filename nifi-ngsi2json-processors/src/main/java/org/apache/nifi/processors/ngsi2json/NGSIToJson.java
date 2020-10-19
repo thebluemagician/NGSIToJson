@@ -12,7 +12,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package org.apache.nifi.processors.custom;
+package org.apache.nifi.processors.ngsi2json;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,7 +47,7 @@ import org.apache.nifi.processor.exception.ProcessException;
 import org.apache.nifi.processor.io.InputStreamCallback;
 import org.apache.nifi.processor.io.OutputStreamCallback;
 import org.apache.nifi.processor.util.StandardValidators;
-import org.apache.nifi.processors.custom.util.FlowFileMappper;
+import org.apache.nifi.processors.ngsi2json.util.FlowFileMappper;
 import org.apache.nifi.stream.io.StreamUtils;
 import org.json.JSONObject;
 

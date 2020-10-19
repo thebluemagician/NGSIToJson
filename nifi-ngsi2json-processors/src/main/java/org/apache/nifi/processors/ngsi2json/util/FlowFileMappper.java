@@ -1,4 +1,4 @@
-package org.apache.nifi.processors.custom.util;
+package org.apache.nifi.processors.ngsi2json.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
