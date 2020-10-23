@@ -2,78 +2,92 @@ package org.apache.nifi.processors.ngsi2json.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
-import java.util.Set;
-import org.apache.commons.collections4.map.CaseInsensitiveMap;
-import org.apache.nifi.components.PropertyDescriptor;
-import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import static org.apache.nifi.processors.ngsi2json.util.Constants.*;
 
 public class FlowFileMappper {
 
   Logger logger = LoggerFactory.getLogger(FlowFileMappper.class);
 
-  public JSONObject map2json(Map<PropertyDescriptor, String> processorProperties,
-      String ngsiFlowFile, Map<String, String> flowFileAttributes) {
+  public String attributeMapper(String attribute, String ngsiVersion, String jsonStructure,
+      Boolean metaDataFlag, String flowFileContent, Map<String, String> flowFileAttributes) {
 
+    String processedData = "";
+    String attrsFormat = flowFileAttributes.getOrDefault(NGSIv2_ATTRSFORMAT, null);
 
-    Map<String, String> newFlowFileAttributes =
-        new CaseInsensitiveMap<String, String>(flowFileAttributes);
+    if (ATTRFORMAT_NORMALIZED.equalsIgnoreCase(attrsFormat)) {
 
-    JSONObject test2 = new JSONObject();
-
-    for (Map.Entry<String, String> entry : newFlowFileAttributes.entrySet()) {
-      test2.put(entry.getKey(), entry.getValue());
+      processedData = normalizedAttrMapper(attribute, ngsiVersion, jsonStructure, metaDataFlag,
+          flowFileContent, flowFileAttributes);
+    } else if (ATTRFORMAT_KEYVALUE.equalsIgnoreCase(attrsFormat)) {
+      processedData = keyValueAttrMapper(attribute, ngsiVersion, jsonStructure, metaDataFlag,
+          flowFileContent, flowFileAttributes);
+    } else {
+      return null;
     }
 
-    logger.error(ngsiFlowFile);
-    /*
-     * JsonReader jsonReader = new JsonReader(new StringReader(ngsiFlowFile));
-     * jsonReader.setLenient(true); JsonElement element = JsonParser.parseReader(jsonReader);
-     */
-
-    JSONObject element = new JSONObject(ngsiFlowFile);
-    test2.put("ngsiData", element);
-    return test2;
+    return processedData;
   }
 
-  // public JSONObject attributeMapper(Map<PropertyDescriptor, String> processorProperties,
-  // String ngsiFlowFile, Map<String, String> flowFileAttributes) {
-  //
-  // Map<String, String> generatedAttributes = new HashMap<String, String>();
-  //
-  // for (final Map.Entry<PropertyDescriptor, String> entry : processorProperties.entrySet()) {
-  // PropertyDescriptor property = entry.getKey();
-  // if (property.isDynamic() && property.isExpressionLanguageSupported()) {
-  // String dynamicValue = processorProperties.get(property);
-  // generatedAttributes.put(property.getName(), dynamicValue);
-  // }
-  // }
-  //
-  // JSONObject test2 = new JSONObject();
-  //
-  // for (Map.Entry<String, String> entry : generatedAttributes.entrySet()) {
-  // test2.put(entry.getKey(), entry.getValue());
-  // }
-  //
-  // return test2;
-  // }
-
-  public String attributeMapper(String attribute, String ngsiVersion, Boolean metaDataFlag,
-      String flowFileContent, Map<String, String> flowFileAttributes) {
+  public String keyValueAttrMapper(String attribute, String ngsiVersion, String jsonStructure,
+      Boolean metaDataFlag, String flowFileContent, Map<String, String> flowFileAttributes) {
 
     JSONObject jsonFlowFile = toJson(flowFileContent);
     JSONObject jsonData = new JSONObject();
     JSONObject jsonMetaData = new JSONObject();
     ArrayList<String> metaAttrs = new ArrayList<String>(
-        new ArrayList<String>(Arrays.asList("subscriptionId", "type", "id", "TimeInstant")));
-    
-    logger.error("JsonFlowFile: " + jsonFlowFile.toString());
+        new ArrayList<String>(Arrays.asList(SUBSCRIPTION_ID, TYPE, ID, TIMEINSTANT)));
 
+    for (String key : jsonFlowFile.keySet()) {
+      if (key.equals("data")) {
+        JSONObject dataObject = jsonFlowFile.getJSONArray(key).getJSONObject(0);
+
+        for (String jsonKey : dataObject.keySet()) {
+          if (metaAttrs.contains(jsonKey)) {
+            if (jsonKey.equals("TimeInstant")) {
+              jsonMetaData.put(jsonKey, dataObject.get(jsonKey));
+            } else {
+              jsonMetaData.put(jsonKey, dataObject.get(jsonKey));
+            }
+          } else {
+            jsonData.put(jsonKey, dataObject.get(jsonKey));
+          }
+        }
+      } else if (metaAttrs.contains(key)) {
+        jsonMetaData.put(key, jsonFlowFile.get(key));
+      }
+    }
+    /*
+     * for (final Map.Entry<PropertyDescriptor, String> entry : processorProperties.entrySet()) {
+     * PropertyDescriptor property = entry.getKey(); if (property.isDynamic() &&
+     * property.isExpressionLanguageSupported()) { String dynamicValue =
+     * processorProperties.get(property); generatedAttributes.put(property.getName(), dynamicValue);
+     * } }
+     */
+
+    JSONObject processedData = new JSONObject();
+
+    if (metaDataFlag == Boolean.FALSE) {
+      processedData = jsonData;
+    } else if (metaDataFlag == Boolean.TRUE) {
+      processedData.put("data", jsonData).put("metadata", jsonMetaData).toString();
+    }
+
+    logger.error("processed data: " + processedData.toString());
+    return processedData.toString();
+  }
+
+  public String normalizedAttrMapper(String attribute, String ngsiVersion, String jsonStructure,
+      Boolean metaDataFlag, String flowFileContent, Map<String, String> flowFileAttributes) {
+
+    JSONObject jsonFlowFile = toJson(flowFileContent);
+    JSONObject jsonData = new JSONObject();
+    JSONObject jsonMetaData = new JSONObject();
+    ArrayList<String> metaAttrs = new ArrayList<String>(
+        new ArrayList<String>(Arrays.asList(SUBSCRIPTION_ID, TYPE, ID, TIMEINSTANT)));
 
     for (String key : jsonFlowFile.keySet()) {
       if (key.equals("data")) {
@@ -95,7 +109,6 @@ public class FlowFileMappper {
       }
     }
 
-    logger.error("JSON_DATA: " + jsonData.toString());
     JSONObject processedData = new JSONObject();
 
     if (metaDataFlag == Boolean.FALSE) {
@@ -113,9 +126,9 @@ public class FlowFileMappper {
     JSONObject element = new JSONObject(jsonString);
     return element;
   }
-  
+
   JSONObject jsonStructure() {
-    
+
     return null;
   }
 }

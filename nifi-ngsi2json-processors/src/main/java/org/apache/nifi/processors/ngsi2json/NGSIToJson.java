@@ -135,12 +135,13 @@ public class NGSIToJson extends AbstractProcessor {
 
     String attribute = context.getProperty(ATTRIBUTE).getValue();
     String ngsiVersion = context.getProperty(NGSI_VERSION).getValue();
+    String jsonStructure = context.getProperty(JSON_TYPE).getValue();
     Boolean metaDataFlag = context.getProperty(METADATA).asBoolean();
 
     FlowFileMappper mapper = new FlowFileMappper();
 
-    String json = mapper.attributeMapper(attribute, ngsiVersion, metaDataFlag, flowFileContent,
-        flowFileAttributes);
+    String json = mapper.attributeMapper(attribute, ngsiVersion, jsonStructure, metaDataFlag,
+        flowFileContent, flowFileAttributes);
 
 
     return json;
@@ -175,11 +176,9 @@ public class NGSIToJson extends AbstractProcessor {
 
     Map<String, String> flowFileAttributes = flowFile.getAttributes();
     final String flowFileContent = new String(buffer, StandardCharsets.UTF_8);
-    Map<PropertyDescriptor, String> processorProperties = context.getProperties();
+    // Map<PropertyDescriptor, String> processorProperties = context.getProperties();
 
     logger.error("NGSI-Content: " + flowFileContent);
-
-    // if(!testValue.isEmpty() || testValue != null) {
 
     String value = processRequest(context, flowFileAttributes, flowFileContent);
 
@@ -192,11 +191,8 @@ public class NGSIToJson extends AbstractProcessor {
         out.write(value.getBytes(StandardCharsets.UTF_8));
       }
     });
-    // session.putAllAttributes(flowFile, flowFileAttributes);
+
     session.transfer(flowFile, REL_SUCCESS);
-    // }
-    // logger.error("Attributes Property is Empty");
-    // session.transfer(flowFile, REL_FAILURE);
   }
 
 }
