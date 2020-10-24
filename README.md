@@ -31,7 +31,7 @@ The notification generated at Orion Context Broker can be `normalized` or in `ke
 - [keyValues](doc/ngsiv2_keyvalues_data.txt)
 
 Properties Configuration scenarios are:
-1. `Json Structure:Flat` and `Include Metadata:False`, Output flowFile is:
+1. `Json Structure:Flat` and `Include Metadata:False`, Output flowFile will be in simple format:
 ```
 {
     "timeStamp": "2020-06-04 19:00:00",
@@ -43,7 +43,7 @@ Properties Configuration scenarios are:
     "deviceId": "fixedEnv011-001"
 }
 ```
-2. `Json Structure:Flat` and `Include Metadata:True`, Output FlowFile is: 
+2. `Json Structure:Flat` and `Include Metadata:True`, Output FlowFile will include metadata in base structure: 
 ```
 {
     "timeStamp": "2020-06-04 19:00:00",
@@ -59,7 +59,7 @@ Properties Configuration scenarios are:
     "TimeInstant": "2020-10-24T15:03:10.734Z"
 }
 ``` 
-3. `Json Structure:Nested` and `Include Metadata:False`, Output FlowFile is:
+3. `Json Structure:Nested` and `Include Metadata:False`, Output FlowFile will have data with empty metadata objects:
 ```
 {
     "metadata": {},
@@ -74,7 +74,7 @@ Properties Configuration scenarios are:
     }
 }
 ```
-4. `Json Structure:Nested` and `Include Metadata:True`, Output FlowFile is:
+4. `Json Structure:Nested` and `Include Metadata:True`, Output FlowFile will have both data and metadata populated objects:
 ```
 {
     "metadata": {
