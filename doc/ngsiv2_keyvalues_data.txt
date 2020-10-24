@@ -1,0 +1,17 @@
+{
+    "subscriptionId": "5f6567985c22ebf98b00e5a0",
+    "data": [
+        {
+            "id": "fixedEnvAir",
+            "type": "envAir",
+            "TimeInstant": "2020-10-24T14:25:56.335Z",
+            "airQualityLevel": "SEVERE",
+            "pm2p5": "201.10",
+            "co": "0.72",
+            "aqiPollutant": "PM2.5",
+            "humidity": "61.45",
+            "deviceId": "fixedEnv011-001",
+            "timeStamp": "2020-06-04 19:20:00"
+        }
+    ]
+}

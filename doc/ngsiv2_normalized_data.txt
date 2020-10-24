@@ -1,0 +1,84 @@
+{
+    "subscriptionId": "5f9431ed5d8d27ba56582358",
+    "data": [
+        {
+            "id": "fixedEnvAir",
+            "type": "envAir",
+            "TimeInstant": {
+                "type": "ISO8601",
+                "value": "2020-10-24T14:16:46.855Z",
+                "metadata": {}
+            },
+            "airQualityLevel": {
+                "type": "string",
+                "value": "SEVERE",
+                "metadata": {
+                    "TimeInstant": {
+                        "type": "ISO8601",
+                        "value": "2020-10-24T14:16:46.855Z"
+                    }
+                }
+            },
+            "aqiPollutant": {
+                "type": "string",
+                "value": "PM2.5",
+                "metadata": {
+                    "TimeInstant": {
+                        "type": "ISO8601",
+                        "value": "2020-10-24T14:16:46.855Z"
+                    }
+                }
+            },
+            "co": {
+                "type": "string",
+                "value": "0.72",
+                "metadata": {
+                    "TimeInstant": {
+                        "type": "ISO8601",
+                        "value": "2020-10-24T14:16:46.855Z"
+                    }
+                }
+            },
+            "deviceId": {
+                "type": "string",
+                "value": "fixedEnv011-001",
+                "metadata": {
+                    "TimeInstant": {
+                        "type": "ISO8601",
+                        "value": "2020-10-24T14:16:46.855Z"
+                    }
+                }
+            },
+            "humidity": {
+                "type": "string",
+                "value": "61.45",
+                "metadata": {
+                    "TimeInstant": {
+                        "type": "ISO8601",
+                        "value": "2020-10-24T14:16:46.855Z"
+                    }
+                }
+            },
+            "pm2p5": {
+                "type": "string",
+                "value": "201.10",
+                "metadata": {
+                    "TimeInstant": {
+                        "type": "ISO8601",
+                        "value": "2020-10-24T14:16:46.855Z"
+                    }
+                }
+            },
+            "timeStamp": {
+                "type": "string",
+                "value": "2020-06-04 19:00:00",
+                "metadata": {
+                    "TimeInstant": {
+                        "type": "ISO8601",
+                        "value": "2020-10-24T14:16:46.855Z"
+                    }
+                }
+            }
+        }
+    ]
+}
