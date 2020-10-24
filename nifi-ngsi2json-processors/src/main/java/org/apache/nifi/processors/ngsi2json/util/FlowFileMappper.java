@@ -8,32 +8,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import static org.apache.nifi.processors.ngsi2json.util.Constants.*;
 
+/**
+ * Processes and maps the ngsi flow file to json data based on provided properties attributes.
+ * @author Md.Adil
+ *
+ */
 public class FlowFileMappper {
 
   Logger logger = LoggerFactory.getLogger(FlowFileMappper.class);
 
-  public String attributeMapper(String attribute, String ngsiVersion, String jsonStructure,
-      Boolean metaDataFlag, String flowFileContent, Map<String, String> flowFileAttributes) {
+  /**
+   * Base attribute mapper method.
+   * 
+   * @param ngsiVersion
+   * @param jsonStructure
+   * @param metaDataFlag
+   * @param flowFileContent
+   * @param flowFileAttributes
+   * @return processedFlowFile
+   */
+  public String attributeMapper(String ngsiVersion, String jsonStructure, Boolean metaDataFlag,
+      String flowFileContent, Map<String, String> flowFileAttributes) {
 
     String processedData = "";
-    String attrsFormat = flowFileAttributes.getOrDefault(NGSIv2_ATTRSFORMAT, null);
+    String attrsFormat = flowFileAttributes.get(NGSIv2_ATTRSFORMAT);
 
     if (ATTRFORMAT_NORMALIZED.equalsIgnoreCase(attrsFormat)) {
 
-      processedData = normalizedAttrMapper(attribute, ngsiVersion, jsonStructure, metaDataFlag,
-          flowFileContent, flowFileAttributes);
+      /* processing data for normalized ngsi attributes */
+      processedData = normalizedAttrMapper(jsonStructure, metaDataFlag, flowFileContent);
+
     } else if (ATTRFORMAT_KEYVALUE.equalsIgnoreCase(attrsFormat)) {
-      processedData = keyValueAttrMapper(attribute, ngsiVersion, jsonStructure, metaDataFlag,
-          flowFileContent, flowFileAttributes);
-    } else {
-      return null;
+
+      /* processing data for keyValues ngsi attributes */
+      processedData = keyValueAttrMapper(jsonStructure, metaDataFlag, flowFileContent);
+
     }
 
     return processedData;
   }
 
-  public String keyValueAttrMapper(String attribute, String ngsiVersion, String jsonStructure,
-      Boolean metaDataFlag, String flowFileContent, Map<String, String> flowFileAttributes) {
+/**
+ * This handles NGSI Flowfile having attrFormat:keyValues.
+ * 
+ * @param jsonStructure
+ * @param metaDataFlag
+ * @param flowFileContent
+ * @return processedKeyValueFlow
+ */
+  public String keyValueAttrMapper(String jsonStructure, Boolean metaDataFlag,
+      String flowFileContent) {
 
     JSONObject jsonFlowFile = toJson(flowFileContent);
     JSONObject jsonData = new JSONObject();
@@ -42,16 +66,12 @@ public class FlowFileMappper {
         new ArrayList<String>(Arrays.asList(SUBSCRIPTION_ID, TYPE, ID, TIMEINSTANT)));
 
     for (String key : jsonFlowFile.keySet()) {
-      if (key.equals("data")) {
+      if (key.equals(DATA)) {
         JSONObject dataObject = jsonFlowFile.getJSONArray(key).getJSONObject(0);
 
         for (String jsonKey : dataObject.keySet()) {
           if (metaAttrs.contains(jsonKey)) {
-            if (jsonKey.equals("TimeInstant")) {
-              jsonMetaData.put(jsonKey, dataObject.get(jsonKey));
-            } else {
-              jsonMetaData.put(jsonKey, dataObject.get(jsonKey));
-            }
+            jsonMetaData.put(jsonKey, dataObject.get(jsonKey));
           } else {
             jsonData.put(jsonKey, dataObject.get(jsonKey));
           }
@@ -60,28 +80,23 @@ public class FlowFileMappper {
         jsonMetaData.put(key, jsonFlowFile.get(key));
       }
     }
-    /*
-     * for (final Map.Entry<PropertyDescriptor, String> entry : processorProperties.entrySet()) {
-     * PropertyDescriptor property = entry.getKey(); if (property.isDynamic() &&
-     * property.isExpressionLanguageSupported()) { String dynamicValue =
-     * processorProperties.get(property); generatedAttributes.put(property.getName(), dynamicValue);
-     * } }
-     */
 
-    JSONObject processedData = new JSONObject();
+    JSONObject processedData =
+        jsonStructureMetaData(jsonData, jsonMetaData, metaDataFlag, jsonStructure);
 
-    if (metaDataFlag == Boolean.FALSE) {
-      processedData = jsonData;
-    } else if (metaDataFlag == Boolean.TRUE) {
-      processedData.put("data", jsonData).put("metadata", jsonMetaData).toString();
-    }
-
-    logger.error("processed data: " + processedData.toString());
     return processedData.toString();
   }
 
-  public String normalizedAttrMapper(String attribute, String ngsiVersion, String jsonStructure,
-      Boolean metaDataFlag, String flowFileContent, Map<String, String> flowFileAttributes) {
+  /**
+   * This handles NGSI Flowfile having attrFormat:normalized.
+   * 
+   * @param jsonStructure
+   * @param metaDataFlag
+   * @param flowFileContent
+   * @return proccessedNormalizedAttr
+   */
+  public String normalizedAttrMapper(String jsonStructure, Boolean metaDataFlag,
+      String flowFileContent) {
 
     JSONObject jsonFlowFile = toJson(flowFileContent);
     JSONObject jsonData = new JSONObject();
@@ -90,18 +105,18 @@ public class FlowFileMappper {
         new ArrayList<String>(Arrays.asList(SUBSCRIPTION_ID, TYPE, ID, TIMEINSTANT)));
 
     for (String key : jsonFlowFile.keySet()) {
-      if (key.equals("data")) {
+      if (key.equals(DATA)) {
         JSONObject dataObject = jsonFlowFile.getJSONArray(key).getJSONObject(0);
 
         for (String jsonKey : dataObject.keySet()) {
           if (metaAttrs.contains(jsonKey)) {
-            if (jsonKey.equals("TimeInstant")) {
-              jsonMetaData.put(jsonKey, dataObject.getJSONObject(jsonKey).getString("value"));
+            if (jsonKey.equals(TIMEINSTANT)) {
+              jsonMetaData.put(jsonKey, dataObject.getJSONObject(jsonKey).getString(VALUE));
             } else {
               jsonMetaData.put(jsonKey, dataObject.get(jsonKey));
             }
           } else {
-            jsonData.put(jsonKey, dataObject.getJSONObject(jsonKey).get("value"));
+            jsonData.put(jsonKey, dataObject.getJSONObject(jsonKey).get(VALUE));
           }
         }
       } else if (metaAttrs.contains(key)) {
@@ -109,26 +124,60 @@ public class FlowFileMappper {
       }
     }
 
-    JSONObject processedData = new JSONObject();
+    JSONObject processedData =
+        jsonStructureMetaData(jsonData, jsonMetaData, metaDataFlag, jsonStructure);
 
-    if (metaDataFlag == Boolean.FALSE) {
-      processedData = jsonData;
-    } else if (metaDataFlag == Boolean.TRUE) {
-      processedData.put("data", jsonData).put("metadata", jsonMetaData).toString();
-    }
-
-    logger.error("processed data: " + processedData.toString());
     return processedData.toString();
   }
 
+  /**
+   * Converts the JsonString into JsonObjects.
+   * 
+   * @param jsonString
+   * @return JsonObject
+   */
   JSONObject toJson(String jsonString) {
 
     JSONObject element = new JSONObject(jsonString);
     return element;
   }
 
-  JSONObject jsonStructure() {
+  /**
+   * Creates the processed data json structure according with the provided metadata and other
+   * provided details through properties.
+   * 
+   * @param jsonData
+   * @param jsonMetaData
+   * @param metaDataFlag
+   * @param jsonStructure
+   * @return JSONObject
+   */
+  JSONObject jsonStructureMetaData(JSONObject jsonData, JSONObject jsonMetaData,
+      Boolean metaDataFlag, String jsonStructure) {
 
-    return null;
+    JSONObject finalData = new JSONObject();
+
+    if (FLAT.equalsIgnoreCase(jsonStructure)) {
+
+      if (metaDataFlag == Boolean.FALSE) {
+        finalData = jsonData;
+      } else if (metaDataFlag == Boolean.TRUE) {
+        finalData = jsonData;
+        for (String key : jsonMetaData.keySet()) {
+          finalData.put(key, jsonMetaData.get(key));
+        }
+      }
+    } else if (NESTED.equalsIgnoreCase(jsonStructure)) {
+
+      if (metaDataFlag == Boolean.FALSE) {
+        finalData.put(DATA, jsonData).put(METADATA, new JSONObject());
+      } else if (metaDataFlag == Boolean.TRUE) {
+        finalData.put(DATA, jsonData).put(METADATA, jsonMetaData);
+      }
+    } else {
+      return jsonData;
+    }
+
+    return finalData;
   }
 }

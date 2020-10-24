@@ -49,12 +49,12 @@ import org.apache.nifi.processor.io.OutputStreamCallback;
 import org.apache.nifi.processor.util.StandardValidators;
 import org.apache.nifi.processors.ngsi2json.util.FlowFileMappper;
 import org.apache.nifi.stream.io.StreamUtils;
-import org.json.JSONObject;
 
 @SupportsBatching
 @InputRequirement(Requirement.INPUT_REQUIRED)
 @Tags({"Json", "NGSIv2", "NGSI", "FIWARE"})
-@CapabilityDescription("Convert the content of the NGSI FlowFile to Flat or Nested Json format. Can add property to select the fields/attribute to filter")
+@CapabilityDescription("Convert the content of the NGSI FlowFile to Flat or "
+    + "Nested Json format. Can add property to select the fields/attribute to filter")
 @SeeAlso({})
 @ReadsAttributes({@ReadsAttribute(attribute = "", description = "")})
 @WritesAttributes({@WritesAttribute(attribute = "", description = "")})
@@ -63,36 +63,60 @@ public class NGSIToJson extends AbstractProcessor {
   private static final String JSON_STRUCTURE_FLAT = "Flat";
   private static final String JSON_STRUCTURE_NESTED = "Nested";
 
-  public static final PropertyDescriptor JSON_TYPE = new PropertyDescriptor.Builder()
-      .name("Json Structure").description("Specifies whether the Json should be Flat or Nested")
-      .required(true).defaultValue(JSON_STRUCTURE_FLAT)
-      .allowableValues(JSON_STRUCTURE_FLAT, JSON_STRUCTURE_NESTED).build();
+  public static final PropertyDescriptor JSON_TYPE = 
+      new PropertyDescriptor.Builder()
+        .name("Json Structure")
+        .description("Specifies whether the Json should be Flat or Nested")
+        .required(true).defaultValue(JSON_STRUCTURE_FLAT)
+        .allowableValues(JSON_STRUCTURE_FLAT, JSON_STRUCTURE_NESTED)
+        .build();
 
-  public static final PropertyDescriptor ATTRIBUTE = new PropertyDescriptor.Builder()
-      .name("Attributes")
-      .description("Comma separted attribute or fields to add in Json, By default all "
-          + "the data attributes along with if metadata is true, metadata attribute will be included")
-      .required(false).addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
-
-  public static final PropertyDescriptor NGSI_VERSION = new PropertyDescriptor.Builder()
-      .name("NGSI Version").description("NGSIv2 is Supported").required(false).allowableValues("v2")
-      .defaultValue("v2").addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
+  /*
+   * public static final PropertyDescriptor ATTRIBUTE = new PropertyDescriptor.Builder()
+   * .name("Attributes")
+   * .description("Comma separted attribute or fields to add in Json, By default all " +
+   * "the data attributes along with if metadata is true, metadata attribute will be included")
+   * .required(false).addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
+   */
+  
+  public static final PropertyDescriptor NGSI_VERSION = 
+      new PropertyDescriptor.Builder()
+        .name("NGSI Version")
+        .description("NGSIv2 is Supported")
+        .required(false)
+        .allowableValues("v2")
+        .defaultValue("v2")
+        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+        .build();
 
   public static final PropertyDescriptor METADATA =
-      new PropertyDescriptor.Builder().name("Include Metadata")
-          .description("If true, the general metadata like- id, type, subscriptionId will "
+      new PropertyDescriptor.Builder()
+        .name("Include Metadata")
+        .description("If true, the general metadata like- id, type, subscriptionId will "
               + "be included in the FlowFile, Attributes metadata will be ignored")
-          .required(true).allowableValues("True", "False").defaultValue("False")
-          .addValidator(StandardValidators.NON_EMPTY_VALIDATOR).build();
+        .required(true)
+        .allowableValues("True", "False")
+        .defaultValue("False")
+        .addValidator(StandardValidators.NON_EMPTY_VALIDATOR)
+        .build();
 
-  public static final Relationship REL_SUCCESS = new Relationship.Builder().name("Success")
-      .description("All created FlowFiles are routed to this relationship").build();
+  public static final Relationship REL_SUCCESS = 
+      new Relationship.Builder()
+        .name("Success")
+        .description("All created FlowFiles are routed to this relationship")
+        .build();
 
   public static final Relationship REL_RETRY =
-      new Relationship.Builder().name("Retry").description("Retry flowfile operation").build();
+      new Relationship.Builder()
+        .name("Retry")
+        .description("Retry flowfile operation")
+        .build();
 
   public static final Relationship REL_FAILURE =
-      new Relationship.Builder().name("Failure").description("Failure of operation").build();
+      new Relationship.Builder()
+        .name("Failure")
+        .description("Failure of operation")
+        .build();
 
   private List<PropertyDescriptor> descriptors;
 
@@ -103,7 +127,7 @@ public class NGSIToJson extends AbstractProcessor {
 
     final List<PropertyDescriptor> descriptors = new ArrayList<PropertyDescriptor>();
     descriptors.add(JSON_TYPE);
-    descriptors.add(ATTRIBUTE);
+    // descriptors.add(ATTRIBUTE);
     descriptors.add(NGSI_VERSION);
     descriptors.add(METADATA);
     this.descriptors = Collections.unmodifiableList(descriptors);
@@ -133,21 +157,18 @@ public class NGSIToJson extends AbstractProcessor {
   String processRequest(final ProcessContext context, Map<String, String> flowFileAttributes,
       String flowFileContent) {
 
-    String attribute = context.getProperty(ATTRIBUTE).getValue();
+    /* String attribute = context.getProperty(ATTRIBUTE).getValue(); */
     String ngsiVersion = context.getProperty(NGSI_VERSION).getValue();
     String jsonStructure = context.getProperty(JSON_TYPE).getValue();
     Boolean metaDataFlag = context.getProperty(METADATA).asBoolean();
 
     FlowFileMappper mapper = new FlowFileMappper();
 
-    String json = mapper.attributeMapper(attribute, ngsiVersion, jsonStructure, metaDataFlag,
-        flowFileContent, flowFileAttributes);
-
+    String json = mapper.attributeMapper(ngsiVersion, jsonStructure, metaDataFlag,
+        flowFileContent,flowFileAttributes);
 
     return json;
   }
-
-
 
   @Override
   public void onTrigger(final ProcessContext context, final ProcessSession session)
@@ -176,18 +197,14 @@ public class NGSIToJson extends AbstractProcessor {
 
     Map<String, String> flowFileAttributes = flowFile.getAttributes();
     final String flowFileContent = new String(buffer, StandardCharsets.UTF_8);
-    // Map<PropertyDescriptor, String> processorProperties = context.getProperties();
-
-    logger.error("NGSI-Content: " + flowFileContent);
-
     String value = processRequest(context, flowFileAttributes, flowFileContent);
 
+    logger.info("Processed Data: " + value);
+    
     flowFile = session.write(flowFile, new OutputStreamCallback() {
 
       @Override
       public void process(OutputStream out) throws IOException {
-        logger.error("Testing NGSIToJson: " + value);
-
         out.write(value.getBytes(StandardCharsets.UTF_8));
       }
     });
